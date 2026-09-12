@@ -1,0 +1,38 @@
+name: Build macOS app
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore ClickCore.Mac.csproj
+
+      - name: Publish Apple Silicon build
+        run: dotnet publish ClickCore.Mac.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o publish-arm64
+
+      - name: Publish Intel build
+        run: dotnet publish ClickCore.Mac.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o publish-x64
+
+      - name: Upload Apple Silicon build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClickCore-macOS-arm64
+          path: publish-arm64
+
+      - name: Upload Intel build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClickCore-macOS-intel
+          path: publish-x64
